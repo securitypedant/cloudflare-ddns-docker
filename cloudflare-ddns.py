@@ -25,15 +25,22 @@ def get_host_from_fqdn(fqdn):
     return host
 
 def main():
+    # Do we want to run in verbose mode?
+    run_mode = os.environ.get("CLOUDFLARE_DDNS_MODE")
+
     # Get arguments from environment variables.
     # NOTE: CLOUDFLARE_API_TOKEN should be set.
     fqdn    = os.environ.get("CLOUDFLARE_DDNS_HOSTNAME")
+    if run_mode == "verbose": print(f"Started Cloudflare DDNS update for { fqdn }.")
+    
     domain  = get_domain_from_fqdn(fqdn)
     wan_ip  = os.environ.get("CLOUDFLARE_DDNS_WANIP")
-
+    
     # Get our WAN interface IP if it hasn't been defined.
     if not wan_ip:
         wan_ip = get_wan_ip()
+
+    if run_mode == "verbose": print(f"Going to update { fqdn } with IP { wan_ip }.")
 
     # Get formatted time/date
     current_date = datetime.datetime.now() 
@@ -44,12 +51,15 @@ def main():
     zones = cf.zones.get(params={ 'name':  domain})
     if len(zones) == 1:
         zone_id = zones[0]['id']
+        if run_mode == "verbose": print(f"Found domain in Cloudflare with id { zone_id }.")
     elif len(zones) == 0:
         # No matching domain
+        if run_mode == "verbose": print("Domain not found for DDnS entry.")
         sys.exit("Domain not found for DDnS entry.")
     else:
         # Something else is wrong.
-       sys.exit(f"Unknown reason for failure. {zones}")
+        if run_mode == "verbose": print(f"Unknown reason for failure. {zones}")
+        sys.exit(f"Unknown reason for failure. {zones}")
     
     records = cf.zones.dns_records.get(zone_id, params={ 'name': fqdn})
 

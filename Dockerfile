@@ -1,10 +1,13 @@
 # Use a base image with Python installed
-FROM python:3.8-slim
+FROM python:3.8
 
 # Copy the Python script and entrypoint script to the container
 COPY cloudflare-ddns.py /app/
 COPY requirements.txt /app/
 COPY entrypoint.sh /app/
+
+# Install cron
+RUN apt-get update && apt-get -y install cron
 
 # Set the working directory
 WORKDIR /app
@@ -16,7 +19,7 @@ RUN chmod +x entrypoint.sh
 RUN pip install -r requirements.txt
 
 # Set an environment variable for the cron schedule (default to every minute)
-ENV CRON_SCHEDULE "*/1 * * * *"
+# ENV CRON_SCHEDULE "*/1 * * * *"
 
 # Run the entrypoint script when the container starts
 CMD ["./entrypoint.sh"]
